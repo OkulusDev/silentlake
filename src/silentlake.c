@@ -71,14 +71,17 @@ int main(int argc, char *argv[]) {
 	bkgdset(COLOR_PAIR(DEFAULT));
 	getmaxyx(stdscr, row, col);
 
-	WINDOW *playerwin = newwin(row, col / 3, 0, 0);
-	WINDOW *mainwin = newwin(row, col / 3 * 2, 0, col / 3);
+	WINDOW *playerwin = newwin(row / 4 * 3, col / 3, 0, 0);
+	WINDOW *mainwin = newwin(row / 4 * 3, col / 3 * 2, 0, col / 3);
+	WINDOW *actwin = newwin(row / 4, col, row / 4 * 3, 0);
 
 	refresh();
 	box(playerwin, 0, 0);
 	box(mainwin, 0, 0);
+	box(actwin, 0, 0);
 
 	getmaxyx(mainwin, mainwinrow, mainwincol);
+	getmaxyx(actwin, row, col);
 
 	Position start_pos = {winrow - 3, 1};
 	player = createPlayer(start_pos, '@');
@@ -89,33 +92,42 @@ int main(int argc, char *argv[]) {
 	print_parameters(playerwin);
 
 	mvwprintw(mainwin, 1, 1, "[Друид озера] Приветствую тебя!");
-	mvwprintw(mainwin, 2, 1, "[y] Поприветствовать [n] Промолчать");
+	mvwprintw(actwin, 1, 1, "[y] Поприветствовать [n] Промолчать");
 
+	update_win(actwin);
 	update_win(mainwin);
 	update_win(playerwin);
 
 	ch = getch();
+	while (ch != 'y' || ch != 'n') {
+		if (ch == 'y') {
+			for (int i=1; i < wincol - 1; i++)
+				mvwprintw(actwin, 1, i, " ");
 
-	if (ch == CTRL('q')) {
-		endwin();
-	} else 
+			mvwprintw(mainwin, 2, 1, "[Вы] Приветствую и тебя, друид!");
+			update_win(mainwin);
+			update_win(actwin);
+			break;
+		} else if (ch == 'n') {
+			for (int i=0; i < wincol - 1; i++)
+				mvwprintw(actwin, 1, i, " ");
 
-	if (ch == 'y') {
-		for (int i=1; i < mainwincol - 1; i++)
-			mvwprintw(mainwin, 2, i, " ");
-	
-		mvwprintw(mainwin, 2, 1, "[Вы] Приветствую и тебя, друид!");
-		update_win(mainwin);
-	} else if (ch == 'n') {
-		for (int i=1; i < mainwincol - 1; i++)
-			mvwprintw(mainwin, 2, i, " ");
-
-		mvwprintw(mainwin, 2, 1, "[Друид] Не молчи, как не живой. Как ты оказался в священном лесу?");
-		update_win(mainwin);
+			mvwprintw(mainwin, 2, 1, "[Друид] Не молчи, как не живой. Как ты оказался в священном лесу?");
+			update_win(mainwin);
+			update_win(actwin);
+			break;
+		}
+		ch = getch();
 	}
 
-	getch();
-		
+
+	while (ch = getch()) {
+		if (ch == CTRL('q')) {
+			endwin();
+			return 0;
+		}
+	}
+
 		/*
  else {
 			inputKeyboardHandle(ch, winrow, wincol);
